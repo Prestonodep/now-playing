@@ -3,20 +3,25 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 
-  if (!clientId || !refreshToken) {
+  if (!clientId || !clientSecret || !refreshToken) {
     return res.status(500).json({ error: 'Not configured' });
   }
 
-  // Exchange refresh token for a fresh access token
+  // Use client_id:client_secret (Base64) — tokens do not rotate with this method
+  const credentials = Buffer.from(clientId + ':' + clientSecret).toString('base64');
+
   const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + credentials,
+    },
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-      client_id: clientId,
     }),
   });
 
@@ -25,12 +30,11 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Token refresh failed' });
   }
 
-  // Fetch currently playing
   const npRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
 
-  if (npRes.status === 204 || npRes.status === 200 && (await npRes.clone().text()) === '') {
+  if (npRes.status === 204) {
     return res.status(200).json({ is_playing: false });
   }
 
@@ -38,8 +42,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ is_playing: false });
   }
 
-  const data = await npRes.json();
+  const text = await npRes.text();
+  if (!text) return res.status(200).json({ is_playing: false });
 
+  const data = JSON.parse(text);
   if (!data || !data.item || data.currently_playing_type !== 'track') {
     return res.status(200).json({ is_playing: false });
   }
