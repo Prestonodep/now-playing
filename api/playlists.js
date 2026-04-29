@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
-  const visibleIds = process.env.SPOTIFY_VISIBLE_PLAYLISTS;
+  const visibleIds = process.env.SPOTIFY_VISIBLE_PLAYLISTS || '';
 
   if (!clientId || !clientSecret || !refreshToken) {
     return res.status(500).json({ error: 'Not configured' });
@@ -41,17 +41,17 @@ module.exports = async function handler(req, res) {
 
   const plData = await plRes.json();
 
-  // Filter by allowed IDs if env var is set
   const allowedIds = visibleIds
-    ? visibleIds.split(',').map(id => id.trim()).filter(Boolean)
-    : null;
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean);
+
+  const allIds = (plData.items || []).filter(Boolean).map(pl => pl.id);
 
   const playlists = (plData.items || [])
     .filter(pl => {
       if (!pl) return false;
-      // If no allowlist set, show all
-      if (!allowedIds) return true;
-      // Only show playlists explicitly in the allowlist
+      if (allowedIds.length === 0) return true;
       return allowedIds.includes(pl.id);
     })
     .map(pl => ({
@@ -63,5 +63,12 @@ module.exports = async function handler(req, res) {
       url: pl.external_urls ? pl.external_urls.spotify : '#',
     }));
 
-  return res.status(200).json({ playlists });
+  return res.status(200).json({
+    debug: {
+      visibleIdsRaw: visibleIds,
+      allowedIds,
+      allIds,
+    },
+    playlists,
+  });
 };
