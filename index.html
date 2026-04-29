@@ -1,230 +1,170 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome to the Session | MediSession</title>
+<title>Welcome to the session | MediSession </title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --green: #1DB954;
-    --white: #ffffff;
-    --off-white: #e8e4df;
-    --muted: #a09890;
-    --dark: #0a0a0a;
-    --card-bg: rgba(255,255,255,0.04);
-    --border: rgba(255,255,255,0.08);
+    --green: #1DB954; --white: #ffffff; --off-white: #e8e4df;
+    --muted: #a09890; --dark: #0a0a0a;
+    --border: rgba(255,255,255,0.08); --card: rgba(255,255,255,0.04);
   }
   html, body { height: 100%; background: var(--dark); color: var(--white); font-family: 'DM Mono', monospace; overflow-x: hidden; }
 
-  #bg-art {
-    position: fixed; inset: 0; z-index: 0;
-    background-size: cover; background-position: center;
-    filter: blur(80px) brightness(0.25) saturate(1.8);
-    transform: scale(1.1);
-    transition: background-image 1.5s ease;
-    pointer-events: none;
-  }
+  #bg-art { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; filter: blur(80px) brightness(0.2) saturate(1.8); transform: scale(1.1); transition: background-image 1.5s ease; pointer-events: none; }
 
-  #player {
-    position: relative; z-index: 1;
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 2rem;
-  }
+  #app { position: relative; z-index: 1; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
 
-  .player-inner {
-    max-width: 520px; width: 100%;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 2rem;
-  }
+  /* LEFT */
+  #now-playing-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2.5rem; min-height: 100vh; border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; }
+  .player-inner { max-width: 420px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2rem; }
+  .live-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.8s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
 
-  .live-pill {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 14px;
-    font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--muted);
-  }
-  .live-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green);
-    animation: pulse-dot 1.8s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  /* ── Playing state ── */
   #playing-state { width: 100%; display: none; flex-direction: column; align-items: center; gap: 2rem; }
-
-  #album-wrap { position: relative; width: min(340px, 80vw); aspect-ratio: 1; }
-  #album-img {
-    width: 100%; height: 100%; object-fit: cover;
-    border-radius: 8px; display: block;
-    transition: opacity 0.6s ease;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
-  }
+  #album-wrap { position: relative; width: min(300px, 70vw); aspect-ratio: 1; }
+  #album-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: block; transition: opacity 0.6s ease; box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
   #album-img.loading { opacity: 0; }
-
   #track-info { text-align: center; width: 100%; }
-  #track-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    font-weight: 300; letter-spacing: -0.01em; line-height: 1.1;
-    color: var(--white); margin-bottom: 0.4em;
-  }
-  #artist-name { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2em; }
-  #album-name { font-size: 0.68rem; color: rgba(160,152,144,0.6); font-style: italic; font-family: 'Cormorant Garamond', serif; letter-spacing: 0.04em; }
-
+  #track-name { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 300; letter-spacing: -0.01em; line-height: 1.1; color: var(--white); margin-bottom: 0.4em; }
+  #artist-name { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2em; }
+  #album-name { font-size: 0.66rem; color: rgba(160,152,144,0.6); font-style: italic; font-family: 'Cormorant Garamond', serif; }
   #progress-wrap { width: 100%; }
   #progress-bar-bg { width: 100%; height: 2px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
   #progress-bar-fill { height: 100%; background: var(--green); border-radius: 999px; width: 0%; transition: width 1s linear; }
-  .time-row { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.05em; }
+  .time-row { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--muted); }
 
-  /* ── Not playing state ── */
   #not-playing { display: flex; flex-direction: column; align-items: center; gap: 2rem; text-align: center; }
-
-  .vinyl { width: min(240px, 60vw); aspect-ratio: 1; position: relative; }
-  .vinyl-disc {
-    width: 100%; height: 100%; border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%,
-      #2a2a2a 0%, #1a1a1a 18%, #111 19%,
-      #222 20%, #1a1a1a 35%, #111 36%,
-      #222 37%, #1a1a1a 52%, #111 53%,
-      #222 54%, #1a1a1a 69%, #111 70%,
-      #222 71%, #1a1a1a 86%, #111 87%,
-      #1a1a1a 100%
-    );
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  }
-  .vinyl-label {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 34%; height: 34%; border-radius: 50%;
-    background: #1a1a1a; border: 1px solid rgba(255,255,255,0.06);
-    display: flex; align-items: center; justify-content: center;
-  }
+  .vinyl { width: min(200px, 50vw); aspect-ratio: 1; position: relative; }
+  .vinyl-disc { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #2a2a2a 0%, #1a1a1a 18%, #111 19%, #222 20%, #1a1a1a 35%, #111 36%, #222 37%, #1a1a1a 52%, #111 53%, #222 54%, #1a1a1a 69%, #111 70%, #222 71%, #1a1a1a 86%, #111 87%, #1a1a1a 100%); box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+  .vinyl-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 34%; height: 34%; border-radius: 50%; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; }
   .vinyl-hole { width: 14%; height: 14%; border-radius: 50%; background: var(--dark); border: 1px solid rgba(255,255,255,0.1); }
   .vinyl-shine { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%); pointer-events: none; }
+  .idle-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 300; color: rgba(255,255,255,0.35); font-style: italic; margin-bottom: 0.3rem; }
+  .idle-sub { font-size: 0.62rem; color: rgba(160,152,144,0.3); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.8rem; }
+  .sound-bars { display: flex; align-items: flex-end; gap: 3px; height: 14px; justify-content: center; }
+  .bar { width: 3px; border-radius: 2px; background: rgba(160,152,144,0.2); }
+  .bar:nth-child(1){height:5px;} .bar:nth-child(2){height:10px;} .bar:nth-child(3){height:7px;} .bar:nth-child(4){height:13px;} .bar:nth-child(5){height:6px;}
 
-  .idle-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 300; color: rgba(255,255,255,0.4); font-style: italic; margin-bottom: 0.3rem; }
-  .idle-sub { font-size: 0.65rem; color: rgba(160,152,144,0.35); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.8rem; }
-  .sound-bars { display: flex; align-items: flex-end; gap: 3px; height: 16px; justify-content: center; }
-  .bar { width: 3px; border-radius: 2px; background: rgba(160,152,144,0.25); }
-  .bar:nth-child(1) { height: 5px; } .bar:nth-child(2) { height: 10px; } .bar:nth-child(3) { height: 7px; } .bar:nth-child(4) { height: 14px; } .bar:nth-child(5) { height: 6px; }
+  /* RIGHT */
+  #playlists-panel { display: flex; flex-direction: column; padding: 3rem 2.5rem; overflow-y: auto; min-height: 100vh; }
+  .playlists-header { margin-bottom: 1.8rem; position: sticky; top: 0; background: linear-gradient(to bottom, #0a0a0a 80%, transparent); padding-bottom: 1rem; z-index: 2; }
+  .playlists-title { font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+  .playlists-sub { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 300; color: var(--white); letter-spacing: -0.01em; }
 
-  /* ── Error state ── */
-  #error-state { display: none; text-align: center; }
-  .error-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: rgba(255,255,255,0.3); font-style: italic; margin-bottom: 0.5rem; }
-  .error-sub { font-size: 0.65rem; color: rgba(160,152,144,0.3); letter-spacing: 0.1em; text-transform: uppercase; }
+  #playlist-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-  .footer { position: fixed; bottom: 1.5rem; left: 0; right: 0; text-align: center; font-size: 0.58rem; color: rgba(160,152,144,0.3); letter-spacing: 0.1em; text-transform: uppercase; z-index: 1; }
+  .playlist-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-decoration: none; color: var(--white); display: flex; flex-direction: column; transition: background 0.2s, border-color 0.2s, transform 0.2s; cursor: pointer; }
+  .playlist-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
+  .playlist-cover { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: rgba(255,255,255,0.05); }
+  .playlist-cover-placeholder { width: 100%; aspect-ratio: 1; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; }
+  .playlist-cover-placeholder svg { opacity: 0.2; width: 36px; height: 36px; }
+  .playlist-info { padding: 0.8rem; flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+  .playlist-name { font-size: 0.75rem; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+  .playlist-meta { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.06em; }
+  .playlist-desc { font-size: 0.62rem; color: rgba(160,152,144,0.5); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.5; margin-top: 0.1rem; }
+  .spotify-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-top: 0.4rem; opacity: 0; transition: opacity 0.2s; }
+  .playlist-card:hover .spotify-btn { opacity: 1; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .skeleton-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .skeleton-img { width: 100%; aspect-ratio: 1; }
+  .skeleton-text { height: 10px; margin: 0.8rem; border-radius: 4px; }
+  .skeleton-text.short { width: 50%; height: 8px; margin-top: 0.4rem; }
+
+  .footer { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; color: rgba(160,152,144,0.25); letter-spacing: 0.12em; text-transform: uppercase; z-index: 10; white-space: nowrap; }
   .footer a { color: inherit; text-decoration: none; }
   .footer a:hover { color: var(--green); }
+
+  @media (max-width: 768px) {
+    #app { grid-template-columns: 1fr; }
+    #now-playing-panel { position: relative; height: auto; min-height: 100vh; border-right: none; border-bottom: 1px solid var(--border); }
+    #playlists-panel { padding: 2rem 1.5rem; }
+  }
+  @media (max-width: 480px) {
+    #playlist-list { grid-template-columns: 1fr; }
+    #now-playing-panel { padding: 2rem 1.5rem; }
+  }
 </style>
 </head>
 <body>
-
 <div id="bg-art"></div>
+<div id="app">
 
-<div id="player">
-  <div class="player-inner">
-
-    <div class="live-pill">
-      <div class="live-dot"></div>
-      <span>live</span>
-    </div>
-
-    <!-- Playing -->
-    <div id="playing-state">
-      <div id="album-wrap">
-        <img id="album-img" src="" alt="Album art" class="loading">
+  <!-- LEFT -->
+  <div id="now-playing-panel">
+    <div class="player-inner">
+      <div class="live-pill"><div class="live-dot"></div><span>live</span></div>
+      <div id="playing-state">
+        <div id="album-wrap"><img id="album-img" src="" alt="Album art" class="loading"></div>
+        <div id="track-info">
+          <div id="track-name">—</div>
+          <div id="artist-name">—</div>
+          <div id="album-name"></div>
+        </div>
+        <div id="progress-wrap">
+          <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+          <div class="time-row"><span id="time-current">0:00</span><span id="time-total">0:00</span></div>
+        </div>
       </div>
-      <div id="track-info">
-        <div id="track-name">—</div>
-        <div id="artist-name">—</div>
-        <div id="album-name"></div>
-      </div>
-      <div id="progress-wrap">
-        <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
-        <div class="time-row">
-          <span id="time-current">0:00</span>
-          <span id="time-total">0:00</span>
+      <div id="not-playing">
+        <div class="vinyl">
+          <div class="vinyl-disc"></div>
+          <div class="vinyl-label"><div class="vinyl-hole"></div></div>
+          <div class="vinyl-shine"></div>
+        </div>
+        <div>
+          <div class="idle-title">Nothing playing</div>
+          <div class="idle-sub">The needle is resting</div>
+          <div class="sound-bars">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Not playing -->
-    <div id="not-playing">
-      <div class="vinyl">
-        <div class="vinyl-disc"></div>
-        <div class="vinyl-label"><div class="vinyl-hole"></div></div>
-        <div class="vinyl-shine"></div>
-      </div>
-      <div>
-        <div class="idle-title">Nothing playing</div>
-        <div class="idle-sub">The needle is resting</div>
-        <div class="sound-bars">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-          <div class="bar"></div><div class="bar"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error -->
-    <div id="error-state">
-      <div class="error-title">Not configured</div>
-      <div class="error-sub">Check API setup</div>
-    </div>
-
   </div>
-</div>
 
+  <!-- RIGHT -->
+  <div id="playlists-panel">
+    <div class="playlists-header">
+      <div class="playlists-title">My playlists</div>
+      <div class="playlists-sub">Browse the collection</div>
+    </div>
+    <div id="playlist-list">
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text" style="width:80%"></div><div class="skeleton skeleton-text short" style="margin-bottom:0.8rem"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text" style="width:70%"></div><div class="skeleton skeleton-text short" style="margin-bottom:0.8rem"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text" style="width:85%"></div><div class="skeleton skeleton-text short" style="margin-bottom:0.8rem"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton skeleton-text" style="width:60%"></div><div class="skeleton skeleton-text short" style="margin-bottom:0.8rem"></div></div>
+    </div>
+  </div>
+
+</div>
 <div class="footer"><a href="https://open.spotify.com" target="_blank">Powered by Spotify</a></div>
 
 <script>
-let lastTrackId = null;
-let progressMs = 0;
-let isPlaying = false;
-let progressInterval = null;
-let totalMs = 0;
+let lastTrackId = null, progressMs = 0, isPlaying = false, totalMs = 0;
 
-function formatTime(ms) {
-  const s = Math.floor(ms / 1000);
-  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-}
+function formatTime(ms) { const s = Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
 function showPlaying(data) {
   document.getElementById('not-playing').style.display = 'none';
-  document.getElementById('error-state').style.display = 'none';
   document.getElementById('playing-state').style.display = 'flex';
-
   const item = data.item;
-  const trackId = item.id;
-  isPlaying = data.is_playing;
-  progressMs = data.progress_ms;
-  totalMs = item.duration_ms;
-
-  if (trackId !== lastTrackId) {
-    lastTrackId = trackId;
+  isPlaying = data.is_playing; progressMs = data.progress_ms; totalMs = item.duration_ms;
+  if (item.id !== lastTrackId) {
+    lastTrackId = item.id;
     const art = item.album.images[0]?.url || '';
     const imgEl = document.getElementById('album-img');
-    if (art) {
-      document.getElementById('bg-art').style.backgroundImage = `url('${art}')`;
-      imgEl.classList.add('loading');
-      imgEl.onload = () => imgEl.classList.remove('loading');
-      imgEl.src = art;
-    }
+    if (art) { document.getElementById('bg-art').style.backgroundImage=`url('${art}')`; imgEl.classList.add('loading'); imgEl.onload=()=>imgEl.classList.remove('loading'); imgEl.src=art; }
     document.getElementById('track-name').textContent = item.name;
-    document.getElementById('artist-name').textContent = item.artists.map(a => a.name).join(', ');
+    document.getElementById('artist-name').textContent = item.artists.map(a=>a.name).join(', ');
     document.getElementById('album-name').textContent = item.album.name;
     document.getElementById('time-total').textContent = formatTime(totalMs);
   }
@@ -232,48 +172,59 @@ function showPlaying(data) {
 }
 
 function showNotPlaying() {
-  lastTrackId = null;
-  isPlaying = false;
-  document.getElementById('playing-state').style.display = 'none';
-  document.getElementById('error-state').style.display = 'none';
-  document.getElementById('not-playing').style.display = 'flex';
-  document.getElementById('bg-art').style.backgroundImage = '';
-}
-
-function showError() {
-  document.getElementById('playing-state').style.display = 'none';
-  document.getElementById('not-playing').style.display = 'none';
-  document.getElementById('error-state').style.display = 'block';
+  lastTrackId=null; isPlaying=false;
+  document.getElementById('playing-state').style.display='none';
+  document.getElementById('not-playing').style.display='flex';
+  document.getElementById('bg-art').style.backgroundImage='';
 }
 
 function updateProgress(ms) {
   if (!totalMs) return;
-  const pct = Math.min((ms / totalMs) * 100, 100);
-  document.getElementById('progress-bar-fill').style.width = pct + '%';
+  document.getElementById('progress-bar-fill').style.width = Math.min((ms/totalMs)*100,100)+'%';
   document.getElementById('time-current').textContent = formatTime(ms);
 }
 
-function tickProgress() {
-  if (!isPlaying) return;
-  progressMs += 1000;
-  updateProgress(progressMs);
-}
+setInterval(()=>{ if(isPlaying){progressMs+=1000; updateProgress(progressMs);} },1000);
 
 async function fetchNowPlaying() {
   try {
     const res = await fetch('/api/now-playing');
-    if (res.status === 500) { showError(); return; }
+    if (!res.ok) return;
     const data = await res.json();
     if (!data.is_playing || !data.item) { showNotPlaying(); return; }
     showPlaying(data);
-  } catch (e) {
-    showNotPlaying();
+  } catch(e) { showNotPlaying(); }
+}
+
+async function fetchPlaylists() {
+  try {
+    const res = await fetch('/api/playlists');
+    if (!res.ok) return;
+    const data = await res.json();
+    renderPlaylists(data.playlists || []);
+  } catch(e) {
+    document.getElementById('playlist-list').innerHTML = '<p style="color:rgba(160,152,144,0.4);font-size:0.72rem;grid-column:1/-1;">Could not load playlists.</p>';
   }
 }
 
+function renderPlaylists(playlists) {
+  const list = document.getElementById('playlist-list');
+  if (!playlists.length) { list.innerHTML='<p style="color:rgba(160,152,144,0.4);font-size:0.72rem;grid-column:1/-1;padding:1rem 0;">No playlists to display.</p>'; return; }
+  list.innerHTML = playlists.map(pl=>`
+    <a class="playlist-card" href="${pl.url}" target="_blank" rel="noopener">
+      ${pl.image ? `<img class="playlist-cover" src="${pl.image}" alt="${pl.name}" loading="lazy">` : `<div class="playlist-cover-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM9 10l12-3"/></svg></div>`}
+      <div class="playlist-info">
+        <div class="playlist-name">${pl.name}</div>
+        <div class="playlist-meta">${pl.tracks} tracks</div>
+        ${pl.description?`<div class="playlist-desc">${pl.description.replace(/<[^>]*>/g,'')}</div>`:''}
+        <div class="spotify-btn"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Open on Spotify</div>
+      </div>
+    </a>`).join('');
+}
+
 fetchNowPlaying();
+fetchPlaylists();
 setInterval(fetchNowPlaying, 5000);
-progressInterval = setInterval(tickProgress, 1000);
 </script>
 </body>
 </html>
