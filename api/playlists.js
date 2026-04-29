@@ -1,6 +1,3 @@
-const { readFileSync } = require('fs');
-const { join } = require('path');
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
@@ -8,6 +5,7 @@ module.exports = async function handler(req, res) {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+  const visibleIds = process.env.SPOTIFY_VISIBLE_PLAYLISTS;
 
   if (!clientId || !clientSecret || !refreshToken) {
     return res.status(500).json({ error: 'Not configured' });
@@ -38,36 +36,23 @@ module.exports = async function handler(req, res) {
   });
 
   if (!plRes.ok) {
-    const errText = await plRes.text();
-    return res.status(500).json({ error: 'Failed to fetch playlists', detail: errText });
+    return res.status(500).json({ error: 'Failed to fetch playlists' });
   }
 
   const plData = await plRes.json();
 
-  // Load visibility config — try multiple paths
-  let configMap = {};
-  try {
-    const paths = [
-      join(process.cwd(), 'playlist-config.json'),
-      join(__dirname, '..', 'playlist-config.json'),
-    ];
-    for (const p of paths) {
-      try {
-        const raw = readFileSync(p, 'utf-8');
-        const config = JSON.parse(raw);
-        config.forEach(item => { configMap[item.id] = item.visible; });
-        break;
-      } catch (e) { continue; }
-    }
-  } catch (e) {
-    configMap = {};
-  }
+  // Filter by allowed IDs if env var is set
+  const allowedIds = visibleIds
+    ? visibleIds.split(',').map(id => id.trim()).filter(Boolean)
+    : null;
 
   const playlists = (plData.items || [])
     .filter(pl => {
       if (!pl) return false;
-      if (pl.id in configMap) return configMap[pl.id] === true;
-      return true;
+      // If no allowlist set, show all
+      if (!allowedIds) return true;
+      // Only show playlists explicitly in the allowlist
+      return allowedIds.includes(pl.id);
     })
     .map(pl => ({
       id: pl.id,
