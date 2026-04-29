@@ -1,0 +1,10 @@
+[
+  {
+    "id": "PASTE_PLAYLIST_ID_HERE",
+    "visible": true
+  },
+  {
+    "id": "PASTE_ANOTHER_PLAYLIST_ID_HERE",
+    "visible": false
+  }
+]
