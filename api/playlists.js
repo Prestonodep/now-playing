@@ -1,7 +1,7 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+const { readFileSync } = require('fs');
+const { join } = require('path');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
 
@@ -32,46 +32,51 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Token refresh failed' });
   }
 
-  // Fetch all user playlists (up to 50)
+  // Fetch playlists
   const plRes = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
 
   if (!plRes.ok) {
-    return res.status(500).json({ error: 'Failed to fetch playlists' });
+    const errText = await plRes.text();
+    return res.status(500).json({ error: 'Failed to fetch playlists', detail: errText });
   }
 
   const plData = await plRes.json();
 
-  // Load visibility config
-  let config = [];
+  // Load visibility config — try multiple paths
+  let configMap = {};
   try {
-    const configPath = join(process.cwd(), 'playlist-config.json');
-    const raw = readFileSync(configPath, 'utf-8');
-    config = JSON.parse(raw);
+    const paths = [
+      join(process.cwd(), 'playlist-config.json'),
+      join(__dirname, '..', 'playlist-config.json'),
+    ];
+    for (const p of paths) {
+      try {
+        const raw = readFileSync(p, 'utf-8');
+        const config = JSON.parse(raw);
+        config.forEach(item => { configMap[item.id] = item.visible; });
+        break;
+      } catch (e) { continue; }
+    }
   } catch (e) {
-    // If no config file exists yet, show all playlists
-    config = [];
+    configMap = {};
   }
 
-  const configMap = {};
-  config.forEach(item => { configMap[item.id] = item.visible; });
-
-  const playlists = plData.items
+  const playlists = (plData.items || [])
     .filter(pl => {
-      // If playlist is in config, respect its visible flag
-      // If not in config at all, show it by default
+      if (!pl) return false;
       if (pl.id in configMap) return configMap[pl.id] === true;
       return true;
     })
     .map(pl => ({
       id: pl.id,
       name: pl.name,
-      description: pl.description,
-      tracks: pl.tracks.total,
-      image: pl.images?.[0]?.url || null,
-      url: pl.external_urls.spotify,
+      description: pl.description || '',
+      tracks: pl.tracks ? pl.tracks.total : 0,
+      image: pl.images && pl.images[0] ? pl.images[0].url : null,
+      url: pl.external_urls ? pl.external_urls.spotify : '#',
     }));
 
   return res.status(200).json({ playlists });
-}
+};
